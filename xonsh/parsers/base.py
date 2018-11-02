@@ -328,7 +328,6 @@ class BaseParser(object):
             "testlist",
             "as_name",
             "period_or_ellipsis_list",
-            "comma_import_as_name_list",
             "comma_dotted_as_name_list",
             "comma_name_list",
             "comma_test",
@@ -364,7 +363,7 @@ class BaseParser(object):
             "semi_small_stmt",
             "comma_test_or_star_expr",
             "period_or_ellipsis",
-            "comma_import_as_name",
+            "import_as_name",
             "comma_dotted_as_name",
             "period_name",
             "comma_name",
@@ -1451,13 +1450,10 @@ class BaseParser(object):
         p[0] = p[2]
 
     def p_import_as_name(self, p):
-        """import_as_name : NAME as_name_opt"""
-        p[0] = ast.alias(name=p[1], asname=p[2])
-
-    def p_comma_import_as_name(self, p):
-        """comma_import_as_name : COMMA import_as_name
+        """import_as_name : NAME as_name_opt
+                          | NAME as_name_opt COMMA
         """
-        p[0] = [p[2]]
+        p[0] = [ast.alias(name=p[1], asname=p[2])]
 
     def p_dotted_as_name(self, p):
         """dotted_as_name : dotted_name as_name_opt"""
@@ -1469,13 +1465,9 @@ class BaseParser(object):
         p[0] = [p[2]]
 
     def p_import_as_names(self, p):
-        """import_as_names : import_as_name comma_import_as_name_list_opt comma_opt
+        """import_as_names : import_as_name_list
         """
-        p1, p2 = p[1], p[2]
-        p0 = [p1]
-        if p2 is not None:
-            p0.extend(p2)
-        p[0] = p0
+        p[0] = p[1]
 
     def p_dotted_as_names(self, p):
         """dotted_as_names : dotted_as_name comma_dotted_as_name_list_opt"""

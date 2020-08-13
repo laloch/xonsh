@@ -1919,8 +1919,13 @@ class Env(cabc.MutableMapping):
             if is_callable_default(val):
                 val = val(self)
         else:
-            e = "Unknown environment variable: ${}"
-            raise KeyError(e.format(key))
+            for k, v in dict(self._vars, **self._d).items():
+                if isinstance(k, re.Pattern) and k.pattern == key:
+                    val = v
+                    break
+            else:
+                e = "Unknown environment variable: ${}"
+                raise KeyError(e.format(key))
         if isinstance(
             val, (cabc.MutableSet, cabc.MutableSequence, cabc.MutableMapping)
         ):
@@ -1972,7 +1977,9 @@ class Env(cabc.MutableMapping):
 
     def __iter__(self):
         for key in set(self._d) | set(self._vars):
-            if isinstance(key, str):
+            if isinstance(key, re.Pattern):
+                yield key.pattern
+            else:
                 yield key
 
     def __contains__(self, item):

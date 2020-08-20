@@ -682,7 +682,7 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            DefaultNotGiven,
             "This is used on Windows to set the title, if available.",
             doc_configurable=False,
         ),
@@ -1086,7 +1086,7 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            ".",
+            DefaultNotGiven,
             "Used to represent a previous present working directory.",
             doc_configurable=False,
         ),
@@ -1281,7 +1281,7 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            DefaultNotGiven,
             "TERM is sometimes set by the terminal emulator. This is used (when "
             "valid) to determine whether or not to set the title. Users shouldn't "
             "need to set this themselves. Note that this variable should be set as "
@@ -1385,7 +1385,7 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            DefaultNotGiven,
             "Path to the currently active Python environment.",
             doc_configurable=False,
         ),
@@ -1585,7 +1585,7 @@ def DEFAULT_VARS():
             is_bool,
             to_bool,
             bool_to_str,
-            True,
+            DefaultNotGiven,
             "``True`` if xonsh is running interactively, and ``False`` otherwise.",
             doc_configurable=False,
         ),
@@ -1620,7 +1620,7 @@ def DEFAULT_VARS():
             is_string,
             ensure_string,
             ensure_string,
-            "",
+            DefaultNotGiven,
             "When running a xonsh script, this variable contains the absolute path "
             "to the currently executing script's file.",
             doc_configurable=False,
@@ -1923,7 +1923,7 @@ class Env(cabc.MutableMapping):
     #
 
     def __getitem__(self, key):
-        # remove this block on next release
+        val = DefaultNotGiven
         if key is Ellipsis:
             return self
         elif key in self._d:
@@ -1932,7 +1932,7 @@ class Env(cabc.MutableMapping):
             val = self.get_default(key)
             if is_callable_default(val):
                 val = val(self)
-        else:
+        if val is DefaultNotGiven:
             e = "Unknown environment variable: ${}"
             raise KeyError(e.format(key))
         if isinstance(
@@ -1992,11 +1992,13 @@ class Env(cabc.MutableMapping):
 
     def __iter__(self):
         for key in self.rawkeys():
-            if isinstance(key, str):
+            if isinstance(key, str) and self.get_default(key) is not DefaultNotGiven:
                 yield key
 
     def __contains__(self, item):
-        return item in self._d or item in self._vars
+        return item in self._d or (
+            item in self._vars and self.get_default(item) is not DefaultNotGiven
+        )
 
     def __len__(self):
         return len(self._d)

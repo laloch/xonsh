@@ -169,7 +169,7 @@ def subproc_captured_stdout(*cmds, envs=None):
     return xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs)
 
 
-def subproc_captured_inject(*cmds, envs=None):
+def subproc_captured_inject(*cmds, split_space=False, envs=None):
     """Runs a subprocess, capturing the output. Returns a list of
     whitespace-separated strings of the stdout that was produced.
     The string is split using xonsh's lexer, rather than Python's str.split()
@@ -180,7 +180,10 @@ def subproc_captured_inject(*cmds, envs=None):
     toks = []
     for line in o:
         line = line.rstrip(os.linesep)
-        toks.extend(builtins.__xonsh__.execer.parser.lexer.split(line))
+        if split_space:
+            toks.extend(builtins.__xonsh__.execer.parser.lexer.split(line))
+        else:
+            toks.append(line)
     return toks
 
 

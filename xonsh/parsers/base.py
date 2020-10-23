@@ -394,6 +394,7 @@ class BaseParser(object):
             "rbracket",
             "at_lparen",
             "atdollar_lparen",
+            "atdollar_lbracket",
             "indent",
             "dedent",
             "newline",
@@ -1788,6 +1789,7 @@ class BaseParser(object):
             "DOLLAR_LBRACE",
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
+            "ATDOLLAR_LBRACKET",
         }
         ts = "\n        | ".join(sorted(toks))
         doc = "nonewline : " + ts + "\n"
@@ -2378,6 +2380,7 @@ class BaseParser(object):
             "DOLLAR_LBRACE",
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
+            "ATDOLLAR_LBRACKET",
         }
         ts = "\n       | ".join(sorted(toks))
         doc = "nocloser : " + ts + "\n"
@@ -2557,6 +2560,7 @@ class BaseParser(object):
             "DOLLAR_LBRACE",
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
+            "ATDOLLAR_LBRACKET",
         }
         ts = "\n            | ".join(sorted(toks))
         doc = "nocomma_tok : " + ts + "\n"
@@ -2603,6 +2607,7 @@ class BaseParser(object):
                           | DOLLAR_LBRACE any_raw_toks_opt RBRACE
                           | DOLLAR_LBRACKET any_raw_toks_opt RBRACKET
                           | ATDOLLAR_LPAREN any_raw_toks_opt RPAREN
+                          | ATDOLLAR_LBRACKET any_raw_toks_opt RBRACKET
         """
         pass
 
@@ -3179,12 +3184,23 @@ class BaseParser(object):
 
     def p_subproc_atom_subproc_inject(self, p):
         """subproc_atom : atdollar_lparen_tok subproc RPAREN
+                        | atdollar_lbracket_tok subproc RBRACKET
            subproc_arg_part : atdollar_lparen_tok subproc RPAREN
+                            | atdollar_lbracket_tok subproc RBRACKET
         """
         p1, p2 = p[1], p[2]
         p0 = xonsh_call(
             "__xonsh__.subproc_captured_inject", p2, lineno=p1.lineno, col=p1.lexpos
         )
+        if p1.type == "ATDOLLAR_LPAREN":
+            p0.keywords.append(
+                ast.keyword(
+                    arg="split_space",
+                    value=ast.Constant(
+                        value=True, lineno=p1.lineno, col_offset=p1.lexpos
+                    ),
+                )
+            )
         p0._cliarg_action = "extend"
         envs = self._get_envvars(p2, lineno=p2[0].lineno, col=p2[0].col_offset)
         if envs is not None:
@@ -3193,14 +3209,18 @@ class BaseParser(object):
 
     def p_subproc_atom_subproc_inject_bang_empty(self, p):
         """subproc_atom : atdollar_lparen_tok subproc bang_tok RPAREN
+                        | atdollar_lbracket_tok subproc bang_tok RBRACKET
            subproc_arg_part : atdollar_lparen_tok subproc bang_tok RPAREN
+                            | atdollar_lbracket_tok subproc bang_tok RBRACKET
         """
         self._append_subproc_bang_empty(p)
         self.p_subproc_atom_subproc_inject(p)
 
     def p_subproc_atom_subproc_inject_bang(self, p):
         """subproc_atom : atdollar_lparen_tok subproc bang_tok nocloser rparen_tok
+                        | atdollar_lbracket_tok subproc bang_tok nocloser rbracket_tok
            subproc_arg_part : atdollar_lparen_tok subproc bang_tok nocloser rparen_tok
+                            | atdollar_lbracket_tok subproc bang_tok nocloser rbracket_tok
         """
         self._append_subproc_bang(p)
         self.p_subproc_atom_subproc_inject(p)
@@ -3312,6 +3332,7 @@ class BaseParser(object):
             "DOLLAR_LBRACE",
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
+            "ATDOLLAR_LBRACKET",
             "AMPERSAND",
         }
         ts = "\n                 | ".join(sorted([t.lower() + "_tok" for t in toks]))

@@ -324,6 +324,7 @@ def special_handlers():
     _make_matcher_handler("![", "BANG_LBRACKET", False, "]", sh)
     _make_matcher_handler("@(", "AT_LPAREN", True, ")", sh)
     _make_matcher_handler("@$(", "ATDOLLAR_LPAREN", False, ")", sh)
+    _make_matcher_handler("@$[", "ATDOLLAR_LBRACKET", False, "]", sh)
     return sh
 
 
@@ -506,6 +507,7 @@ class Lexer(object):
                     "DOLLAR_LBRACE",  # ${
                     "DOLLAR_LBRACKET",  # $[
                     "ATDOLLAR_LPAREN",  # @$(
+                    "ATDOLLAR_LBRACKET",  # @$[
                     "ERRORTOKEN",  # whoops!
                 )
                 + tuple(i.upper() for i in kwlist)

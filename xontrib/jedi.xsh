@@ -41,6 +41,7 @@ def XONSH_SPECIAL_TOKENS():
         "!(",
         "@(",
         "@$(",
+        "@$[",
         "@",
     }
 
